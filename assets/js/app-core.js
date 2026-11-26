@@ -45,6 +45,7 @@ const DB_STORE = 'trees';
 const appState = {
     nodes: [],
     edges: [], // { id, type: 'spouse' | 'parent-child', source, target }
+    isReadOnly: false,
     viewport: {
         x: 0,
         y: 0,
@@ -57,8 +58,10 @@ const driveState = {
     accessTokenExpiresAt: 0,
     tokenClient: null,
     pickerReady: false,
+    shareClientReady: false,
     currentDriveFileId: localStorage.getItem('ftc_drive_file_id') || null,
     currentDriveFileName: localStorage.getItem('ftc_drive_file_name') || null,
+    lastKnownModifiedTime: localStorage.getItem('ftc_drive_modified_time') || null,
     isSyncing: false
 };
 
@@ -591,6 +594,7 @@ function renderEdges() {
 }
 
 function createNodeElement(node) {
+    const isReadOnly = Boolean(appState.isReadOnly);
     const el = document.createElement('div');
     el.id = `node-el-${node.id}`;
     el.className = 'family-node shadow-node p-3.5 select-none';
@@ -607,42 +611,48 @@ function createNodeElement(node) {
         .join('')
         .toUpperCase();
 
+    const roInputAttr = isReadOnly ? 'readonly tabindex="-1"' : '';
+    const roInputClass = isReadOnly ? 'pointer-events-none' : '';
+
     el.innerHTML = `
         <!-- Top Accent Bar -->
         <div class="node-accent-bar absolute top-0 left-4 right-4 h-1 rounded-b-full opacity-80"></div>
 
         <!-- Header Kartu: Toggle Gender & Hapus -->
         <div class="flex items-center justify-between gap-2 mb-2.5">
-            <button type="button" data-action="toggle-gender" class="no-export inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold transition cursor-pointer ${genderInfo.badgeClass}" title="${escapeHtml(t('node.toggleGenderTitle'))}">
+            <button type="button" data-action="toggle-gender" ${isReadOnly ? 'disabled' : ''} class="no-export inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold transition ${isReadOnly ? 'cursor-default' : 'cursor-pointer'} ${genderInfo.badgeClass}" ${isReadOnly ? '' : `title="${escapeHtml(t('node.toggleGenderTitle'))}"`}>
                 <span>${genderInfo.icon}</span>
                 <span>${genderInfo.label}</span>
             </button>
+            ${isReadOnly ? '' : `
             <button type="button" data-action="delete-node" class="no-export p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer" title="${escapeHtml(t('node.deleteTitle'))}">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            </button>
+            </button>`}
         </div>
 
         <!-- Konten Utama: Avatar + Direct Inline Inputs -->
         <div class="flex items-start gap-3">
             <!-- Avatar dengan Upload & Kompresi Lokal -->
-            <button type="button" data-action="upload-avatar" class="group relative w-12 h-12 rounded-2xl border overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition ${genderInfo.avatarBg}" title="${escapeHtml(t('node.uploadAvatarTitle'))}">
+            <button type="button" data-action="upload-avatar" ${isReadOnly ? 'disabled' : ''} class="group relative w-12 h-12 rounded-2xl border overflow-hidden flex items-center justify-center shrink-0 transition ${isReadOnly ? 'cursor-default' : 'cursor-pointer'} ${genderInfo.avatarBg}" ${isReadOnly ? '' : `title="${escapeHtml(t('node.uploadAvatarTitle'))}"`}>
                 ${node.photo
                     ? `<img src="${node.photo}" alt="${escapeHtml(node.name)}" class="w-full h-full object-cover">`
                     : `<span class="font-display font-bold text-sm">${initials || '?'}</span>`
                 }
+                ${isReadOnly ? '' : `
                 <div class="no-export absolute inset-0 bg-slate-900/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
                     <i data-lucide="camera" class="w-4 h-4"></i>
-                </div>
+                </div>`}
             </button>
 
             <!-- Direct Inline Editing Fields -->
             <div class="flex-1 min-w-0 space-y-1">
-                <input type="text" data-field="name" value="${escapeHtml(node.name)}" placeholder="${escapeHtml(t('node.namePlaceholder'))}" class="inline-input font-display font-bold text-sm text-slate-900 leading-snug" />
-                <input type="text" data-field="years" value="${escapeHtml(node.years)}" placeholder="${escapeHtml(t('node.yearsPlaceholder'))}" class="inline-input text-[11px] font-medium text-slate-500" />
-                <input type="text" data-field="role" value="${escapeHtml(node.role)}" placeholder="${escapeHtml(t('node.rolePlaceholder'))}" class="inline-input text-[11px] text-slate-600" />
+                <input type="text" data-field="name" value="${escapeHtml(node.name)}" ${roInputAttr} placeholder="${escapeHtml(t('node.namePlaceholder'))}" class="inline-input ${roInputClass} font-display font-bold text-sm text-slate-900 leading-snug" />
+                <input type="text" data-field="years" value="${escapeHtml(node.years)}" ${roInputAttr} placeholder="${escapeHtml(t('node.yearsPlaceholder'))}" class="inline-input ${roInputClass} text-[11px] font-medium text-slate-500" />
+                <input type="text" data-field="role" value="${escapeHtml(node.role)}" ${roInputAttr} placeholder="${escapeHtml(t('node.rolePlaceholder'))}" class="inline-input ${roInputClass} text-[11px] text-slate-600" />
             </div>
         </div>
 
+        ${isReadOnly ? '' : `
         <!-- Quick Relation Action Buttons (Disembunyikan saat Export PNG) -->
         <div class="no-export grid grid-cols-3 gap-1.5 mt-3 pt-2.5 border-t border-slate-100">
             <button type="button" data-action="add-parent" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200/70 hover:border-indigo-200 text-[10px] font-semibold transition cursor-pointer whitespace-nowrap" title="${escapeHtml(t('node.addParentTitle'))}">
@@ -654,13 +664,16 @@ function createNodeElement(node) {
             <button type="button" data-action="add-child" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200/70 hover:border-emerald-200 text-[10px] font-semibold transition cursor-pointer whitespace-nowrap" title="${escapeHtml(t('node.addChildTitle'))}">
                 <span>${escapeHtml(t('node.addChild'))}</span>
             </button>
-        </div>
+        </div>`}
     `;
 
     // Event: Direct Inline Input Updates
     el.querySelectorAll('.inline-input').forEach(input => {
-        input.addEventListener('pointerdown', (e) => e.stopPropagation());
+        input.addEventListener('pointerdown', (e) => {
+            if (!appState.isReadOnly) e.stopPropagation();
+        });
         input.addEventListener('input', (e) => {
+            if (appState.isReadOnly) return;
             const field = e.target.dataset.field;
             node[field] = e.target.value;
             if (field === 'name' && !node.photo) {
@@ -681,8 +694,11 @@ function createNodeElement(node) {
 
     // Event: Quick Buttons on Card
     el.querySelectorAll('[data-action]').forEach(btn => {
-        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('pointerdown', (e) => {
+            if (!appState.isReadOnly) e.stopPropagation();
+        });
         btn.addEventListener('click', (e) => {
+            if (appState.isReadOnly) return;
             e.stopPropagation();
             const action = btn.dataset.action;
             if (action === 'toggle-gender') {
@@ -711,6 +727,7 @@ function createNodeElement(node) {
     let dragStartNodePos = { x: 0, y: 0 };
 
     el.addEventListener('pointerdown', (e) => {
+        if (appState.isReadOnly) return;
         if (e.button !== 0 || spacePressed) return;
         if (e.target.closest('input') || e.target.closest('button')) return;
 
@@ -751,6 +768,24 @@ function createNodeElement(node) {
     return el;
 }
 
+function applyReadOnlyState() {
+    const isReadOnly = Boolean(appState.isReadOnly);
+    const readonlyBadge = document.getElementById('readonly-badge');
+    const btnAddNode = document.getElementById('btn-add-node');
+    const btnAutoLayout = document.getElementById('btn-auto-layout');
+    const btnDriveSave = document.getElementById('btn-drive-save');
+    const btnDriveQuickSync = document.getElementById('btn-drive-quicksync');
+
+    if (readonlyBadge) {
+        readonlyBadge.classList.toggle('hidden', !isReadOnly);
+        readonlyBadge.classList.toggle('inline-flex', isReadOnly);
+    }
+    if (btnAddNode) btnAddNode.classList.toggle('hidden', isReadOnly);
+    if (btnAutoLayout) btnAutoLayout.classList.toggle('hidden', isReadOnly);
+    if (btnDriveSave) btnDriveSave.classList.toggle('hidden', isReadOnly);
+    if (btnDriveQuickSync) btnDriveQuickSync.classList.toggle('hidden', isReadOnly);
+}
+
 function renderAll() {
     nodesLayer.innerHTML = '';
     appState.nodes.forEach(node => {
@@ -759,6 +794,7 @@ function renderAll() {
     if (window.lucide) lucide.createIcons({ root: nodesLayer });
     renderEdges();
     updateStatsCounter();
+    applyReadOnlyState();
 }
 
 function updateStatsCounter() {
@@ -771,6 +807,7 @@ function updateStatsCounter() {
 // 8. MANIPULASI NODE & RELASI (TAMBAH ORTU, PASANGAN, ANAK, HAPUS)
 // ============================================================================
 function addStandaloneNode() {
+    if (appState.isReadOnly) return;
     const centerWorldX = (window.innerWidth / 2 - appState.viewport.x) / appState.viewport.scale - NODE_WIDTH / 2;
     const centerWorldY = (window.innerHeight / 2 - appState.viewport.y) / appState.viewport.scale - DEFAULT_NODE_HEIGHT / 2;
     const jitterX = Math.round((Math.random() - 0.5) * 80);
@@ -794,6 +831,7 @@ function addStandaloneNode() {
 }
 
 function addRelatedNode(anchorNodeId, relationType) {
+    if (appState.isReadOnly) return;
     const anchor = appState.nodes.find(n => n.id === anchorNodeId);
     if (!anchor) return;
 
@@ -898,6 +936,7 @@ function addRelatedNode(anchorNodeId, relationType) {
 }
 
 function deleteNode(nodeId) {
+    if (appState.isReadOnly) return;
     appState.nodes = appState.nodes.filter(n => n.id !== nodeId);
     appState.edges = appState.edges.filter(e => e.source !== nodeId && e.target !== nodeId);
     renderAll();
@@ -946,7 +985,7 @@ avatarUploadInput.addEventListener('change', (e) => {
 // 10. AUTO-LAYOUT HIERARKIS ANTI-TUMPUK ("RAPIKAN POSISI")
 // ============================================================================
 function runAutoLayout() {
-    if (appState.nodes.length === 0) return;
+    if (appState.isReadOnly || appState.nodes.length === 0) return;
 
     const nodeIds = appState.nodes.map(n => n.id);
     const levelMap = new Map(nodeIds.map(id => [id, 0]));

@@ -22,7 +22,8 @@ const translations = {
         header: {
             savedLocal: 'Tersimpan lokal',
             saving: 'Menyimpan...',
-            memberCount: '{count} anggota'
+            memberCount: '{count} anggota',
+            viewOnlyBadge: '👁️ Mode Lihat Saja (View Only)'
         },
         toolbar: {
             searchTitle: 'Cari Anggota (Ctrl/Cmd + K)',
@@ -45,6 +46,8 @@ const translations = {
             driveModeOverwrite: 'Timpa',
             driveSaveAs: 'Simpan sebagai file baru',
             driveOpen: 'Buka dari Drive',
+            driveShare: 'Bagikan (Share)',
+            driveCopyLink: 'Salin Tautan',
             driveUnlink: 'Lepas tautan file',
             exportPng: 'Export PNG HD',
             exportJson: 'Export JSON',
@@ -70,7 +73,7 @@ const translations = {
             item3Desc: 'Backup lokal maupun file di Google Drive pribadi sepenuhnya berada dalam kendali Anda.',
             controlsHint: 'Geser: Drag area kosong • Zoom: Scroll',
             policyLink: 'Kebijakan Privasi →',
-            badgePrefix: '🔒 Local-First & Privat • Created by'
+            badgePrefix: '🔒 Zero-Database • Data Hanya di Browser & Google Drive Anda'
         },
         pwa: {
             offlineBadge: '⚡ Mode Offline • Data aman tersimpan lokal'
@@ -140,7 +143,32 @@ const translations = {
             decryptDefaultError: 'Password salah atau file rusak',
             decryptEmptyError: 'Silakan masukkan password terlebih dahulu.',
             decryptFailedError: 'Password salah atau file rusak. Data Canvas saat ini tetap aman.',
-            decryptSubmitBtn: 'Buka & Muat Silsilah'
+            decryptSubmitBtn: 'Buka & Muat Silsilah',
+            conflictTitle: 'Konflik Versi Google Drive',
+            conflictMessage: 'File di Google Drive telah diperbarui oleh pengguna lain sejak terakhir kali Anda buka. Pilih tindakan untuk menghindari kehilangan data:',
+            conflictReload: 'Muat Versi Terbaru',
+            conflictOverwrite: 'Tetap Timpa (Overwrite)',
+            shareTitle: 'Bagikan Silsilah (Google Drive)',
+            shareSubtitle: 'Undang kerabat atau salin tautan langsung',
+            shareEmailLabel: 'Undang via Email Google:',
+            shareEmailPlaceholder: 'nama@gmail.com',
+            shareRoleViewer: 'Viewer (Lihat Saja)',
+            shareRoleEditor: 'Editor (Bisa Edit)',
+            shareAddBtn: 'Undang',
+            shareAnyoneLabel: 'Akses Tautan Umum:',
+            shareAnyoneOff: 'Terbatas (Hanya yang diundang)',
+            shareAnyoneViewer: 'Siapa saja dengan tautan (Viewer)',
+            shareAnyoneEditor: 'Siapa saja dengan tautan (Editor)',
+            sharePeopleTitle: 'Orang dengan akses:',
+            shareOwnerBadge: 'Pemilik',
+            shareRemoveTitle: 'Cabut akses',
+            shareCopyLinkBtn: 'Salin Tautan Aplikasi',
+            shareOpenDriveLink: 'Buka di Google Drive ↗',
+            shareLoading: 'Memuat daftar akses...',
+            shareEmptyEmail: 'Masukkan alamat email yang valid.',
+            shareAddedToast: 'Akses dibagikan ke {email}',
+            shareRemovedToast: 'Akses dicabut',
+            shareAnyoneUpdatedToast: 'Pengaturan akses tautan diperbarui'
         },
         search: {
             placeholder: 'Cari nama lengkap, tahun lahir/wafat, atau peran...',
@@ -165,9 +193,13 @@ const translations = {
             newFileFallback: 'file baru',
             quickSyncTitle: 'Simpan ulang ke file Google Drive yang terhubung',
             quickSyncBtn: 'Sync',
+            shareBtnTitle: 'Bagikan akses file Google Drive',
+            copyLinkBtnTitle: 'Salin tautan langsung ke silsilah ini',
+            linkCopiedToast: 'Tautan silsilah berhasil disalin',
             unlinkedToast: 'Tautan file Google Drive dilepas',
             errMissingClientId: 'GOOGLE_CLIENT_ID belum diisi di google-config.js.',
             errMissingApiKey: 'GOOGLE_API_KEY belum diisi di google-config.js.',
+            errMissingAppId: 'GOOGLE_APP_ID tidak valid pada google-config.js.',
             errOffline: 'Google Drive memerlukan koneksi internet. Data lokal tetap aman.',
             errAuthNotReady: 'Layanan login Google belum siap. Periksa koneksi lalu coba lagi.',
             errAuthCancelled: 'Login Google dibatalkan.',
@@ -178,11 +210,14 @@ const translations = {
             errPickerNotReady: 'Google Picker belum siap. Periksa koneksi lalu coba lagi.',
             errPickerLoadFailed: 'Google Picker gagal dimuat.',
             errPickerTimeout: 'Google Picker terlalu lama merespons.',
+            errShareLoadFailed: 'Dialog Bagikan Google Drive gagal dimuat.',
             promptFileName: 'Nama file di Google Drive:',
             defaultFileName: 'silsilah-keluarga.json',
             errOldFileMissing: 'File Google Drive lama tidak ditemukan. Simpan kembali sebagai file baru.',
             errSaveHttp: 'Gagal menyimpan (HTTP {status}).',
             savedToast: 'Tersimpan di Google Drive: {fileName}',
+            loadedViewOnlyToast: 'Dibuka dalam mode Lihat Saja (View Only): {fileName}',
+            reloadedLatestToast: 'Versi terbaru dari Google Drive berhasil dimuat',
             pickerTitle: 'Pilih File Silsilah (JSON) dari Google Drive',
             errOpenFile: 'Gagal membuka file Google Drive: {message}',
             errPrefix: 'Google Drive: {message}'
@@ -223,7 +258,8 @@ const translations = {
         header: {
             savedLocal: 'Saved locally',
             saving: 'Saving...',
-            memberCount: '{count} members'
+            memberCount: '{count} members',
+            viewOnlyBadge: '👁️ View Only'
         },
         toolbar: {
             searchTitle: 'Search Members (Ctrl/Cmd + K)',
@@ -246,6 +282,8 @@ const translations = {
             driveModeOverwrite: 'Overwrite',
             driveSaveAs: 'Save as new file',
             driveOpen: 'Open from Drive',
+            driveShare: 'Share',
+            driveCopyLink: 'Copy Link',
             driveUnlink: 'Unlink file',
             exportPng: 'Export HD PNG',
             exportJson: 'Export JSON',
@@ -271,7 +309,7 @@ const translations = {
             item3Desc: 'Both local backups and files in your personal Google Drive remain completely under your control.',
             controlsHint: 'Pan: Drag empty area • Zoom: Scroll',
             policyLink: 'Privacy Policy →',
-            badgePrefix: '🔒 Local-First & Private • Created by'
+            badgePrefix: '🔒 Zero-Database • Data Only in Your Browser & Google Drive'
         },
         pwa: {
             offlineBadge: '⚡ Offline Mode • Data safely stored locally'
@@ -341,7 +379,32 @@ const translations = {
             decryptDefaultError: 'Incorrect password or corrupted file',
             decryptEmptyError: 'Please enter a password first.',
             decryptFailedError: 'Incorrect password or corrupted file. Your current Canvas data remains safe.',
-            decryptSubmitBtn: 'Unlock & Load Tree'
+            decryptSubmitBtn: 'Unlock & Load Tree',
+            conflictTitle: 'Google Drive Version Conflict',
+            conflictMessage: 'This file was updated on Google Drive by someone else since you last opened it. Choose how to proceed to avoid losing data:',
+            conflictReload: 'Load Latest Version',
+            conflictOverwrite: 'Overwrite Anyway',
+            shareTitle: 'Share Family Tree (Google Drive)',
+            shareSubtitle: 'Invite relatives or copy a direct link',
+            shareEmailLabel: 'Invite via Google Email:',
+            shareEmailPlaceholder: 'name@gmail.com',
+            shareRoleViewer: 'Viewer (View Only)',
+            shareRoleEditor: 'Editor (Can Edit)',
+            shareAddBtn: 'Invite',
+            shareAnyoneLabel: 'General Link Access:',
+            shareAnyoneOff: 'Restricted (Invited only)',
+            shareAnyoneViewer: 'Anyone with the link (Viewer)',
+            shareAnyoneEditor: 'Anyone with the link (Editor)',
+            sharePeopleTitle: 'People with access:',
+            shareOwnerBadge: 'Owner',
+            shareRemoveTitle: 'Remove access',
+            shareCopyLinkBtn: 'Copy App Link',
+            shareOpenDriveLink: 'Open in Google Drive ↗',
+            shareLoading: 'Loading access list...',
+            shareEmptyEmail: 'Please enter a valid email address.',
+            shareAddedToast: 'Access shared with {email}',
+            shareRemovedToast: 'Access removed',
+            shareAnyoneUpdatedToast: 'Link access updated'
         },
         search: {
             placeholder: 'Search full name, birth/death year, or role...',
@@ -366,9 +429,13 @@ const translations = {
             newFileFallback: 'new file',
             quickSyncTitle: 'Re-save to connected Google Drive file',
             quickSyncBtn: 'Sync',
+            shareBtnTitle: 'Share Google Drive file access',
+            copyLinkBtnTitle: 'Copy direct link to this family tree',
+            linkCopiedToast: 'Family tree link copied to clipboard',
             unlinkedToast: 'Google Drive file unlinked',
             errMissingClientId: 'GOOGLE_CLIENT_ID is not set in google-config.js.',
             errMissingApiKey: 'GOOGLE_API_KEY is not set in google-config.js.',
+            errMissingAppId: 'GOOGLE_APP_ID is invalid in google-config.js.',
             errOffline: 'Google Drive requires an internet connection. Local data remains safe.',
             errAuthNotReady: 'Google sign-in service is not ready. Check your connection and try again.',
             errAuthCancelled: 'Google sign-in was cancelled.',
@@ -379,11 +446,14 @@ const translations = {
             errPickerNotReady: 'Google Picker is not ready. Check your connection and try again.',
             errPickerLoadFailed: 'Failed to load Google Picker.',
             errPickerTimeout: 'Google Picker timed out.',
+            errShareLoadFailed: 'Failed to load Google Drive Share dialog.',
             promptFileName: 'File name in Google Drive:',
             defaultFileName: 'family-tree.json',
             errOldFileMissing: 'Previous Google Drive file was not found. Save again as a new file.',
             errSaveHttp: 'Failed to save (HTTP {status}).',
             savedToast: 'Saved to Google Drive: {fileName}',
+            loadedViewOnlyToast: 'Opened in View Only mode: {fileName}',
+            reloadedLatestToast: 'Latest version loaded from Google Drive',
             pickerTitle: 'Select Family Tree File (JSON) from Google Drive',
             errOpenFile: 'Failed to open Google Drive file: {message}',
             errPrefix: 'Google Drive: {message}'

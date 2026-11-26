@@ -278,9 +278,15 @@ function applyImportedTreeData(parsed) {
 function completeImportContext(context) {
     if (context && context.source === 'drive') {
         driveState.currentDriveFileId = context.fileId;
-        driveState.currentDriveFileName = context.fileName || 'silsilah-keluarga.json';
+        driveState.currentDriveFileName = context.fileName || t('drive.defaultFileName');
+        driveState.lastKnownModifiedTime = context.modifiedTime || null;
+        appState.isReadOnly = context.canEdit === false;
+        if (typeof applyReadOnlyState === 'function') applyReadOnlyState();
+        renderAll();
         updateDriveUI();
     } else {
+        appState.isReadOnly = false;
+        if (typeof applyReadOnlyState === 'function') applyReadOnlyState();
         unlinkDriveFile(false);
     }
 }
@@ -293,7 +299,13 @@ function importJsonText(rawText, context = { source: 'local' }) {
     }
     applyImportedTreeData(parsed);
     completeImportContext(context);
-    showToast(t('alerts.jsonImportSuccess', { count: appState.nodes.length }), 'success');
+    if (context && context.source === 'drive' && context.canEdit === false) {
+        showToast(t('drive.loadedViewOnlyToast', { fileName: driveState.currentDriveFileName }), 'info');
+    } else if (context && context.reloadedLatest) {
+        showToast(t('drive.reloadedLatestToast'), 'success');
+    } else {
+        showToast(t('alerts.jsonImportSuccess', { count: appState.nodes.length }), 'success');
+    }
     return true;
 }
 

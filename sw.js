@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-tree-v5';
+const CACHE_NAME = 'family-tree-v7';
 const CORE_ASSETS = [
   './',
   './index.html',

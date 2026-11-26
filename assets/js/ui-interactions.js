@@ -486,4 +486,8 @@ window.addEventListener('load', async () => {
             saveStateToStorage();
         });
     }
+
+    if (typeof checkAndLoadDriveHash === 'function') {
+        checkAndLoadDriveHash();
+    }
 });
