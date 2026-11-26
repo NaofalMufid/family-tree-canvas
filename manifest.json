@@ -1,0 +1,20 @@
+{
+  "name": "Family Tree Canvas — Silsilah Keluarga",
+  "short_name": "Silsilah",
+  "description": "Aplikasi pembuat pohon dan kanvas silsilah keluarga interaktif 100% lokal, privat, dan offline-ready.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Kebijakan Privasi (Privacy Policy) untuk Family Tree Canvas — Aplikasi silsilah keluarga 100% client-side, local-first, dan zero-backend." />
+  <meta name="robots" content="index, follow" />
+  <title>Kebijakan Privasi / Privacy Policy — Family Tree Canvas</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-en: #334155;
+      --border: #e2e8f0;
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-soft: #f0fdfa;
+      --primary-border: #ccfbf1;
+      --badge-bg: #ecfdf5;
+      --badge-text: #065f46;
+      --code-bg: #f1f5f9;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 16px rgba(15, 23, 42, 0.03);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1120;
+        --surface: #111827;
+        --surface-subtle: #1e293b;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --text-en: #cbd5e1;
+        --border: #1e293b;
+        --primary: #2dd4bf;
+        --primary-hover: #5eead4;
+        --primary-soft: rgba(45, 212, 191, 0.08);
+        --primary-border: rgba(45, 212, 191, 0.22);
+        --badge-bg: rgba(16, 185, 129, 0.14);
+        --badge-text: #6ee7b7;
+        --code-bg: #1e293b;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background-color: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      padding: 24px 16px 64px;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* Navigasi Atas */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: border-color 0.15s ease, transform 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-back:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .lang-btn.active {
+        color: #042f2e;
+      }
+    }
+
+    /* Kartu Utama Dokumen */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 24px 20px;
+        border-radius: 12px;
+      }
+    }
+
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Bagian Konten */
+    section {
+      margin-bottom: 28px;
+    }
+
+    section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sec-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 6px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      flex-shrink: 0;
+    }
+
+    p {
+      font-size: 0.96rem;
+      margin-bottom: 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .en-block {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--surface-subtle);
+      border-left: 3px solid var(--border);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-en);
+    }
+
+    .en-block p:last-child,
+    .en-block ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .callout {
+      margin: 14px 0;
+      padding: 14px 16px;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      border-radius: 10px;
+      font-size: 0.92rem;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.84em;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      word-break: break-all;
+    }
+
+    a.link {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 500;
+    }
+
+    a.link:hover {
+      color: var(--primary-hover);
+    }
+
+    /* Mode Filter Bahasa */
+    body.mode-id .en-block,
+    body.mode-id [data-lang="en"] {
+      display: none;
+    }
+
+    body.mode-en [data-lang="id"] {
+      display: none;
+    }
+
+    body.mode-en .en-block {
+      background: transparent;
+      border-left: none;
+      padding: 0;
+      margin-top: 0;
+      font-size: 0.96rem;
+      color: var(--text);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Navigasi Atas -->
+    <nav class="topbar" aria-label="Navigasi Halaman">
+      <a href="./index.html" class="btn-back">
+        <span aria-hidden="true">←</span>
+        <span>Kembali ke Aplikasi</span>
+      </a>
+
+      <div class="lang-switch" role="group" aria-label="Pilih Bahasa">
+        <button type="button" class="lang-btn active" data-set-lang="all">ID + EN</button>
+        <button type="button" class="lang-btn" data-set-lang="id">Indonesia</button>
+        <button type="button" class="lang-btn" data-set-lang="en">English</button>
+      </div>
+    </nav>
+
+    <!-- Konten Utama -->
+    <main class="card">
+      <header class="header">
+        <div class="pill">🔒 100% Client-Side • Zero-Backend • Local-First</div>
+        <h1>Kebijakan Privasi / Privacy Policy</h1>
+        <p class="subtitle">Family Tree Canvas — Aplikasi Pembuat Pohon &amp; Kanvas Silsilah Keluarga</p>
+        <div class="meta">
+          <span><strong>Pembaruan Terakhir / Last Updated:</strong> 26 November 2026</span>
+          <span><strong>Pengembang / Developer:</strong> @kamingsun</span>
+        </div>
+      </header>
+
+      <!-- Bagian 1 -->
+      <section>
+        <h2><span class="sec-num">1</span> Ringkasan Arsitektur &amp; Prinsip Privasi</h2>
+        <div data-lang="id">
+          <p>
+            <strong>Family Tree Canvas</strong> dibangun dengan arsitektur <strong>100% client-side, local-first, dan zero-backend</strong>. Seluruh pemrosesan data silsilah keluarga—termasuk nama, tahun lahir/wafat, catatan relasi, maupun foto profil—berjalan sepenuhnya di dalam memori peramban (<em>browser</em>) pada perangkat pengguna sendiri.
+          </p>
+          <p>
+            Aplikasi ini <strong>tidak memiliki server database pusat</strong>. Pengembang tidak pernah mengumpulkan, menerima, menyimpan, melihat, maupun memiliki salinan atas data silsilah atau foto apa pun yang Anda buat.
+          </p>
+        </div>
+        <div class="en-block">
+          <p>
+            <strong>Architecture &amp; Privacy Overview:</strong> <strong>Family Tree Canvas</strong> is built on a <strong>100% client-side, local-first, zero-backend</strong> architecture. All processing of family tree data—including names, birth/death dates, relationship notes, and profile photos—occurs entirely inside your browser's local memory on your own device. We do not operate any central database server, and the developer has zero access to, copies of, or visibility into your family tree data or photos.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bagian 2 -->
+      <section>
+        <h2><span class="sec-num">2</span> Penyimpanan Lokal &amp; Enkripsi Sisi Klien</h2>
+        <div data-lang="id">
+          <ul>
+            <li><strong>Penyimpanan Perangkat Lokal:</strong> Untuk kenyamanan fitur <em>auto-save</em>, data kanvas dan foto yang telah dikompresi secara otomatis disimpan secara lokal di penyimpanan peramban perangkat Anda menggunakan teknologi standar web (<code>IndexedDB</code> dan/atau <code>localStorage</code>).</li>
+            <li><strong>Enkripsi Opsional (AES-GCM 256-bit):</strong> Saat mengekspor file cadangan silsilah ke format <code>.json</code>, Anda dapat mengaktifkan perlindungan kata sandi opsional. Proses enkripsi dilakukan langsung di perangkat Anda menggunakan antarmuka bawaan peramban <strong>Web Crypto API</strong> dengan derivasi kunci <strong>PBKDF2 (SHA-256)</strong> dan algoritma <strong>AES-GCM 256-bit</strong>.</li>
+            <li><strong>Tanpa Pemulihan Kata Sandi:</strong> Karena kata sandi dan kunci enkripsi tidak pernah dikirim ke server mana pun, hanya Anda yang dapat membuka file cadangan terenkripsi tersebut.</li>
+          </ul>
+        </div>
+        <div class="en-block">
+          <p>
+            <strong>Local Storage &amp; Client-Side Encryption:</strong> Auto-saved tree data and locally compressed photos are stored exclusively on your device's browser storage (<code>IndexedDB</code> / <code>localStorage</code>). When exporting your data to a <code>.json</code> backup file, you may optionally encrypt the payload directly in your browser using the native <strong>Web Crypto API</strong> (<strong>PBKDF2 SHA-256</strong> key derivation + <strong>AES-GCM 256-bit</strong>). Passwords never leave your device.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bagian 3 -->
+      <section>
+        <h2><span class="sec-num">3</span> Integrasi Google Drive API (Opsional) &amp; Kebijakan Limited Use</h2>
+        <div data-lang="id">
+          <p>
+            Fitur sinkronisasi atau pencadangan ke <strong>Google Drive</strong> bersifat sepenuhnya <strong>opsional</strong> dan hanya aktif atas tindakan eksplisit pengguna (saat Anda menekan tombol <em>Simpan ke Google Drive</em> atau <em>Buka dari Google Drive</em>).
+          </p>
+          <ul>
+            <li><strong>Izin Akses Minimal (Least Privilege):</strong> Aplikasi hanya meminta ruang lingkup (<em>scope</em>) minimal <code>https://www.googleapis.com/auth/drive.file</code>. Dengan izin ini, aplikasi <strong>hanya</strong> dapat melihat, membuat, dan memperbarui file <code>.json</code> silsilah yang secara spesifik dibuat atau dibuka melalui Family Tree Canvas, serta <strong>tidak dapat</strong> membaca, mengubah, atau menghapus file pribadi lainnya di Google Drive Anda.</li>
+            <li><strong>Koneksi Langsung Browser-ke-Google:</strong> Token otorisasi OAuth sementara hanya disimpan di memori sesi peramban Anda untuk berkomunikasi langsung dengan API Google Drive tanpa perantara server pihak ketiga.</li>
+          </ul>
+        </div>
+
+        <div class="callout">
+          <div class="callout-title">Google API Services User Data Policy — Limited Use Disclosure</div>
+          <p>
+            Family Tree Canvas's use and transfer to any other app of information received from Google APIs will adhere to the
+            <a class="link" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>,
+            including the <strong>Limited Use</strong> requirements.
+          </p>
+          <p style="margin-bottom: 0;">
+            Specifically, data accessed via <code>https://www.googleapis.com/auth/drive.file</code> is used solely to provide user-initiated backup and restore functionality for your family tree files. We <strong>never</strong> sell Google user data, use it for advertising or profiling, allow human reading of user data, or share/transfer it to any third-party servers.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bagian 4 -->
+      <section>
+        <h2><span class="sec-num">4</span> Tanpa Pelacakan (Zero Tracking &amp; Zero Telemetry)</h2>
+        <div data-lang="id">
+          <ul>
+            <li><strong>Tanpa Cookie Pelacak:</strong> Aplikasi tidak memasang <em>tracking cookies</em> maupun pengidentifikasi lintas situs.</li>
+            <li><strong>Tanpa Analitik Pihak Ketiga:</strong> Tidak ada skrip pelacak perilaku pengguna (seperti Google Analytics, Meta Pixel, atau perangkat telemetri tersembunyi) yang dimuat di dalam aplikasi ini.</li>
+          </ul>
+        </div>
+        <div class="en-block">
+          <p>
+            <strong>Zero Tracking:</strong> Family Tree Canvas does not use tracking cookies, third-party analytics scripts, advertising trackers, or hidden telemetry. Your browsing activity and family tree edits remain strictly private.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bagian 5 -->
+      <section>
+        <h2><span class="sec-num">5</span> Kendali &amp; Penghapusan Data oleh Pengguna</h2>
+        <div data-lang="id">
+          <p>
+            Anda memegang kendali penuh atas seluruh data Anda setiap saat. Anda dapat menghapus seluruh data lokal aplikasi kapan saja melalui tombol <strong>Reset</strong> di dalam aplikasi atau dengan membersihkan data situs (<em>Site Data / Browser Storage</em>) pada pengaturan peramban Anda. Jika Anda pernah menghubungkan akun Google Drive, Anda juga dapat mencabut akses aplikasi kapan saja melalui halaman <a class="link" href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account Permissions</a>.
+          </p>
+        </div>
+        <div class="en-block">
+          <p>
+            <strong>User Control &amp; Data Deletion:</strong> You retain full ownership and control of your data. You can erase all local data at any time using the in-app <strong>Reset</strong> action or by clearing browser site storage, and revoke optional Google Drive access anytime via your <a class="link" href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account Permissions</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bagian 6 -->
+      <section>
+        <h2><span class="sec-num">6</span> Kontak Pengembang / Developer Contact</h2>
+        <div data-lang="id">
+          <p>
+            Apabila Anda memiliki pertanyaan mengenai Kebijakan Privasi ini, arsitektur keamanan aplikasi, atau proses verifikasi integrasi Google OAuth, silakan hubungi pengembang melalui:
+          </p>
+        </div>
+        <div class="en-block" style="margin-bottom: 10px;">
+          <p>
+            If you have any questions regarding this Privacy Policy, security architecture, or Google OAuth integration, please contact the developer:
+          </p>
+        </div>
+        <ul>
+          <li><strong>Pengembang / Maintainer:</strong> <code>@kamingsun</code></li>
+          <li><strong>Email Privasi / Support:</strong> <a class="link" href="mailto:privacy@kamingsun.id">privacy@kamingsun.id</a></li>
+          <li><strong>Aplikasi / Application URL:</strong> <a class="link" href="./index.html">Family Tree Canvas</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>🔒 100% Lokal &amp; Privat • Created by @kamingsun</p>
+    </footer>
+  </div>
+
+  <!-- Pengalih Bahasa Ringan Inline -->
+  <script>
+    (function () {
+      var buttons = document.querySelectorAll('[data-set-lang]');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener('click', function () {
+          var mode = this.getAttribute('data-set-lang');
+          document.body.classList.remove('mode-id', 'mode-en');
+          if (mode === 'id') document.body.classList.add('mode-id');
+          if (mode === 'en') document.body.classList.add('mode-en');
+
+          for (var j = 0; j < buttons.length; j++) {
+            buttons[j].classList.remove('active');
+          }
+          this.classList.add('active');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
