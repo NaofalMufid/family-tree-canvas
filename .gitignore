@@ -1,0 +1,21 @@
+# macOS & OS artifacts
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+
+# Editors & IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local environment & logs
+.env
+.env.local
+*.log
+
+# Personal family tree backups
+*silsilah*.json
+*backup*.json

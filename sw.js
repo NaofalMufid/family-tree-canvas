@@ -1,10 +1,18 @@
-const CACHE_NAME = 'family-tree-v2';
+const CACHE_NAME = 'family-tree-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
   './privacy.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './assets/css/app.css',
+  './assets/js/tailwind-config.js',
+  './assets/js/google-config.js',
+  './assets/js/app-core.js',
+  './assets/js/data-transfer.js',
+  './assets/js/google-drive.js',
+  './assets/js/ui-interactions.js',
+  './assets/js/pwa.js'
 ];
 
 // Dependensi ini diperlukan agar tampilan dan ekspor tetap berfungsi setelah
@@ -16,6 +24,14 @@ const EXTERNAL_ASSETS = [
   'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap'
 ];
+
+const CACHEABLE_EXTERNAL_ORIGINS = new Set([
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com',
+  'https://cdn.jsdelivr.net',
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com'
+]);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -56,6 +72,7 @@ self.addEventListener('fetch', (event) => {
   if (!url.protocol.startsWith('http')) return;
 
   const isLocal = url.origin === self.location.origin;
+  const isCacheableExternal = CACHEABLE_EXTERNAL_ORIGINS.has(url.origin);
 
   if (request.mode === 'navigate') {
     // Navigasi harus selalu mempunyai halaman lokal saat perangkat offline.
@@ -76,9 +93,9 @@ self.addEventListener('fetch', (event) => {
         .catch(() => caches.match(request).then((cached) => cached || new Response('Aset tidak tersedia saat offline.', {
           status: 503,
           statusText: 'Service Unavailable'
-        }))
+        })))
     );
-  } else {
+  } else if (isCacheableExternal) {
     // Cache-First untuk aset CDN eksternal (Tailwind, html-to-image, font)
     event.respondWith(
       caches.match(request).then((cached) => {
@@ -95,5 +112,9 @@ self.addEventListener('fetch', (event) => {
         }));
       })
     );
+  } else {
+    // API dan data privat (termasuk Google Drive) selalu langsung ke jaringan.
+    // Jangan pernah menyimpan respons berotorisasi ke Cache Storage.
+    event.respondWith(fetch(request));
   }
 });
