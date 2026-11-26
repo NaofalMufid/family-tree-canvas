@@ -67,7 +67,7 @@ async function encryptJsonPayload(plainObject, password) {
 
 async function decryptJsonEnvelope(envelope, password) {
     if (!envelope || !envelope.salt || !envelope.iv || !envelope.ciphertext) {
-        throw new Error('Struktur file terenkripsi tidak valid');
+        throw new Error(t('alerts.encryptedInvalidStructure'));
     }
     const saltBuffer = base64ToBuffer(envelope.salt);
     const ivBuffer = base64ToBuffer(envelope.iv);
@@ -115,14 +115,14 @@ function openExportJsonModal(options = {}) {
     inputExportPassword.type = 'password';
     exportJsonError.classList.add('hidden');
     const isDrive = exportDestination.type === 'drive';
-    exportJsonTitle.textContent = isDrive ? 'Simpan ke Google Drive' : 'Export Data Silsilah (.JSON)';
+    exportJsonTitle.textContent = isDrive ? t('modal.jsonTitleDrive') : t('modal.jsonTitleDownload');
     exportJsonDescription.textContent = isDrive
-        ? 'Pilih apakah file Drive akan dilindungi password'
-        : 'Termasuk seluruh anggota, relasi & foto';
+        ? t('modal.jsonDescDrive')
+        : t('modal.jsonDescDownload');
     exportEncryptionDescription.textContent = isDrive
-        ? 'Enkripsi lokal AES-GCM 256-bit sebelum diunggah'
-        : 'Enkripsi lokal AES-GCM 256-bit sebelum diunduh';
-    lblConfirmExportJson.textContent = isDrive ? 'Simpan ke Drive' : 'Unduh JSON';
+        ? t('modal.jsonEncryptDescDrive')
+        : t('modal.jsonEncryptDescDownload');
+    lblConfirmExportJson.textContent = isDrive ? t('modal.jsonDriveSaveBtn') : t('modal.jsonDownloadBtn');
     exportJsonModal.classList.remove('hidden');
     exportJsonModal.classList.add('flex');
 }
@@ -143,11 +143,11 @@ chkEncryptJson.addEventListener('change', () => {
     exportJsonError.classList.add('hidden');
     if (chkEncryptJson.checked) {
         exportPasswordSection.classList.remove('hidden');
-        lblConfirmExportJson.textContent = exportDestination.type === 'drive' ? 'Enkripsi & Simpan' : 'Enkripsi & Unduh';
+        lblConfirmExportJson.textContent = exportDestination.type === 'drive' ? t('modal.jsonEncryptSaveBtn') : t('modal.jsonEncryptDownloadBtn');
         requestAnimationFrame(() => inputExportPassword.focus());
     } else {
         exportPasswordSection.classList.add('hidden');
-        lblConfirmExportJson.textContent = exportDestination.type === 'drive' ? 'Simpan ke Drive' : 'Unduh JSON';
+        lblConfirmExportJson.textContent = exportDestination.type === 'drive' ? t('modal.jsonDriveSaveBtn') : t('modal.jsonDownloadBtn');
     }
 });
 
@@ -160,7 +160,7 @@ document.getElementById('btn-confirm-export-json').addEventListener('click', asy
     const dateStr = new Date().toISOString().slice(0, 10);
     const pwd = inputExportPassword.value;
     if (chkEncryptJson.checked && (!pwd || pwd.trim().length < 4)) {
-        exportJsonError.textContent = 'Masukkan password minimal 4 karakter.';
+        exportJsonError.textContent = t('modal.jsonPwdMinError');
         exportJsonError.classList.remove('hidden');
         inputExportPassword.focus();
         return;
@@ -187,14 +187,14 @@ document.getElementById('btn-confirm-export-json').addEventListener('click', asy
             : `silsilah-keluarga-${dateStr}.json`);
         URL.revokeObjectURL(url);
         showToast(wasEncrypted
-            ? 'File JSON terenkripsi AES-256 berhasil diunduh'
-            : 'File silsilah .JSON berhasil diunduh', 'success');
+            ? t('alerts.jsonEncryptedDownloaded')
+            : t('alerts.jsonDownloaded'), 'success');
     } catch (err) {
         if (!exportJsonModal.classList.contains('hidden')) {
-            exportJsonError.textContent = 'Gagal menyiapkan file JSON di browser.';
+            exportJsonError.textContent = t('modal.jsonPrepareError');
             exportJsonError.classList.remove('hidden');
         } else {
-            showToast(`Google Drive: ${err.message}`, 'error');
+            showToast(t('drive.errPrefix', { message: err.message }), 'error');
         }
     }
 });
@@ -236,7 +236,7 @@ async function handleDecryptSubmit() {
     if (!pendingEncryptedEnvelope) return;
     const pwd = inputDecryptPassword.value;
     if (!pwd) {
-        decryptErrorText.textContent = 'Silakan masukkan password terlebih dahulu.';
+        decryptErrorText.textContent = t('modal.decryptEmptyError');
         decryptErrorBox.classList.remove('hidden');
         return;
     }
@@ -247,10 +247,10 @@ async function handleDecryptSubmit() {
         applyImportedTreeData(decryptedData);
         completeImportContext(importContext);
         closeDecryptModal();
-        showToast('File terenkripsi berhasil dibuka & dimuat', 'success');
+        showToast(t('alerts.jsonDecryptedLoaded'), 'success');
     } catch (err) {
         // Jangan ubah state kanvas aktif jika password salah
-        decryptErrorText.textContent = 'Password salah atau file korup. Data kanvas saat ini tetap aman.';
+        decryptErrorText.textContent = t('modal.decryptFailedError');
         decryptErrorBox.classList.remove('hidden');
         inputDecryptPassword.select();
     }
@@ -266,7 +266,7 @@ inputDecryptPassword.addEventListener('keydown', (e) => {
 
 function applyImportedTreeData(parsed) {
     if (!parsed || !Array.isArray(parsed.nodes)) {
-        throw new Error('Format silsilah tidak valid');
+        throw new Error(t('alerts.jsonInvalidFormat'));
     }
     appState.nodes = parsed.nodes;
     appState.edges = Array.isArray(parsed.edges) ? parsed.edges : [];
@@ -293,7 +293,7 @@ function importJsonText(rawText, context = { source: 'local' }) {
     }
     applyImportedTreeData(parsed);
     completeImportContext(context);
-    showToast(`Berhasil memuat ${appState.nodes.length} anggota keluarga`, 'success');
+    showToast(t('alerts.jsonImportSuccess', { count: appState.nodes.length }), 'success');
     return true;
 }
 
@@ -311,7 +311,7 @@ fileImportInput.addEventListener('change', (e) => {
         try {
             importJsonText(ev.target.result, { source: 'local' });
         } catch (err) {
-            showToast('File JSON tidak valid atau rusak', 'error');
+            showToast(t('alerts.jsonInvalidFile'), 'error');
         }
     };
     reader.readAsText(file);

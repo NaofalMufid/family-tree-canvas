@@ -22,14 +22,14 @@ function updateDriveUI() {
         statusPill.classList.remove('hidden');
         statusPill.classList.add('inline-flex');
         statusText.textContent = driveState.isSyncing
-            ? `⏳ Menyimpan ke Drive: ${driveState.currentDriveFileName || 'file baru'}...`
-            : `☁️ Tersimpan di Drive: ${driveState.currentDriveFileName}`;
+            ? t('drive.statusSyncing', { fileName: driveState.currentDriveFileName || t('drive.newFileFallback') })
+            : t('drive.statusSynced', { fileName: driveState.currentDriveFileName });
     } else {
         statusPill.classList.add('hidden');
         statusPill.classList.remove('inline-flex');
     }
 
-    saveMode.textContent = hasFile ? 'Timpa' : 'Baru';
+    saveMode.textContent = hasFile ? t('toolbar.driveModeOverwrite') : t('toolbar.driveModeNew');
     if (hasFile) {
         saveAsBtn.classList.remove('hidden');
         saveAsBtn.classList.add('flex');
@@ -50,15 +50,15 @@ function unlinkDriveFile(showNotification = true) {
     driveState.currentDriveFileName = null;
     driveState.isSyncing = false;
     updateDriveUI();
-    if (showNotification) showToast('Tautan file Google Drive dilepas', 'info');
+    if (showNotification) showToast(t('drive.unlinkedToast'), 'info');
 }
 
 function assertGoogleConfig() {
     if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('YOUR_CLIENT_ID')) {
-        throw new Error('GOOGLE_CLIENT_ID belum diisi di index.html.');
+        throw new Error(t('drive.errMissingClientId'));
     }
     if (!GOOGLE_API_KEY || GOOGLE_API_KEY.includes('YOUR_API_KEY')) {
-        throw new Error('GOOGLE_API_KEY belum diisi di index.html.');
+        throw new Error(t('drive.errMissingApiKey'));
     }
 }
 
@@ -72,11 +72,11 @@ function requestGoogleAccessToken(forceRefresh = false) {
         }
 
         if (!navigator.onLine) {
-            reject(new Error('Google Drive memerlukan koneksi internet. Data lokal tetap aman.'));
+            reject(new Error(t('drive.errOffline')));
             return;
         }
         if (!window.google?.accounts?.oauth2) {
-            reject(new Error('Layanan login Google belum siap. Periksa koneksi lalu coba lagi.'));
+            reject(new Error(t('drive.errAuthNotReady')));
             return;
         }
 
@@ -92,11 +92,11 @@ function requestGoogleAccessToken(forceRefresh = false) {
             scope: DRIVE_SCOPE,
             callback: (response) => {
                 if (response.error || !response.access_token) {
-                    reject(new Error(response.error_description || 'Login Google dibatalkan.'));
+                    reject(new Error(response.error_description || t('drive.errAuthCancelled')));
                     return;
                 }
                 if (!google.accounts.oauth2.hasGrantedAllScopes(response, DRIVE_SCOPE)) {
-                    reject(new Error('Izin akses file Google Drive tidak diberikan.'));
+                    reject(new Error(t('drive.errScopeDenied')));
                     return;
                 }
                 driveState.accessToken = response.access_token;
@@ -107,10 +107,10 @@ function requestGoogleAccessToken(forceRefresh = false) {
                 const popupBlocked = error?.type === 'popup_failed_to_open' || error?.type === 'popup_blocked';
                 const popupClosed = error?.type === 'popup_closed';
                 reject(new Error(popupBlocked
-                    ? 'Pop-up login diblokir browser. Izinkan pop-up lalu coba lagi.'
+                    ? t('drive.errPopupBlocked')
                     : popupClosed
-                        ? 'Jendela login Google ditutup sebelum proses selesai.'
-                        : 'Jendela login Google gagal dibuka.'));
+                        ? t('drive.errPopupClosed')
+                        : t('drive.errPopupFailed')));
             }
         });
 
@@ -125,7 +125,7 @@ function loadGooglePicker() {
             return;
         }
         if (!window.gapi) {
-            reject(new Error('Google Picker belum siap. Periksa koneksi lalu coba lagi.'));
+            reject(new Error(t('drive.errPickerNotReady')));
             return;
         }
         gapi.load('picker', {
@@ -133,9 +133,9 @@ function loadGooglePicker() {
                 driveState.pickerReady = true;
                 resolve();
             },
-            onerror: () => reject(new Error('Google Picker gagal dimuat.')),
+            onerror: () => reject(new Error(t('drive.errPickerLoadFailed'))),
             timeout: 10000,
-            ontimeout: () => reject(new Error('Google Picker terlalu lama merespons.'))
+            ontimeout: () => reject(new Error(t('drive.errPickerTimeout')))
         });
     });
 }
@@ -183,18 +183,18 @@ async function beginGoogleDriveSave(forceNewFile = false) {
         await requestGoogleAccessToken(false);
         openExportJsonModal({ type: 'drive', forceNewFile });
     } catch (error) {
-        showToast(`Google Drive: ${error.message}`, 'error');
+        showToast(t('drive.errPrefix', { message: error.message }), 'error');
     }
 }
 
 async function uploadJsonToGoogleDrive(jsonContent, forceNewFile = false) {
     let fileId = forceNewFile ? null : driveState.currentDriveFileId;
-    let fileName = driveState.currentDriveFileName || 'silsilah-keluarga.json';
+    let fileName = driveState.currentDriveFileName || t('drive.defaultFileName');
 
     if (!fileId) {
-        const requestedName = window.prompt('Nama file di Google Drive:', fileName);
+        const requestedName = window.prompt(t('drive.promptFileName'), fileName);
         if (requestedName === null) return;
-        fileName = requestedName.trim() || 'silsilah-keluarga.json';
+        fileName = requestedName.trim() || t('drive.defaultFileName');
         if (!fileName.toLowerCase().endsWith('.json')) fileName += '.json';
     }
 
@@ -216,18 +216,18 @@ async function uploadJsonToGoogleDrive(jsonContent, forceNewFile = false) {
 
         if (response.status === 404 && fileId) {
             unlinkDriveFile(false);
-            showToast('File Drive lama tidak ditemukan. Simpan kembali sebagai file baru.', 'info');
+            showToast(t('drive.errOldFileMissing'), 'info');
             return beginGoogleDriveSave(true);
         }
         if (!response.ok) {
             const errorPayload = await response.json().catch(() => ({}));
-            throw new Error(errorPayload?.error?.message || `Gagal menyimpan (HTTP ${response.status}).`);
+            throw new Error(errorPayload?.error?.message || t('drive.errSaveHttp', { status: response.status }));
         }
 
         const savedFile = await response.json();
         driveState.currentDriveFileId = savedFile.id;
         driveState.currentDriveFileName = savedFile.name || fileName;
-        showToast(`Tersimpan di Google Drive: ${driveState.currentDriveFileName}`, 'success');
+        showToast(t('drive.savedToast', { fileName: driveState.currentDriveFileName }), 'success');
     } finally {
         driveState.isSyncing = false;
         updateDriveUI();
@@ -248,7 +248,7 @@ async function openFromGoogleDrive() {
             .setOAuthToken(token)
             .setDeveloperKey(GOOGLE_API_KEY)
             .addView(docsView)
-            .setTitle('Pilih File Silsilah (.json) dari Google Drive')
+            .setTitle(t('drive.pickerTitle'))
             .setCallback(async (data) => {
                 if (data.action !== google.picker.Action.PICKED) return;
                 const file = data.docs?.[0];
@@ -266,10 +266,10 @@ async function openFromGoogleDrive() {
                     importJsonText(rawText, {
                         source: 'drive',
                         fileId: file.id,
-                        fileName: file.name || 'silsilah-keluarga.json'
+                        fileName: file.name || t('drive.defaultFileName')
                     });
                 } catch (error) {
-                    showToast(`Gagal membuka file Drive: ${error.message}`, 'error');
+                    showToast(t('drive.errOpenFile', { message: error.message }), 'error');
                 }
             });
 
@@ -277,7 +277,7 @@ async function openFromGoogleDrive() {
         if (window.location.origin !== 'null') builder.setOrigin(window.location.origin);
         builder.build().setVisible(true);
     } catch (error) {
-        showToast(`Google Drive: ${error.message}`, 'error');
+        showToast(t('drive.errPrefix', { message: error.message }), 'error');
     }
 }
 

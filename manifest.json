@@ -1,7 +1,7 @@
 {
   "name": "Family Tree Canvas — Silsilah Keluarga",
   "short_name": "Silsilah",
-  "description": "Aplikasi pembuat pohon dan kanvas silsilah keluarga interaktif 100% lokal, privat, dan offline-ready.",
+  "description": "Aplikasi pembuat pohon dan Canvas silsilah keluarga interaktif yang local-first, privat, dan siap offline.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

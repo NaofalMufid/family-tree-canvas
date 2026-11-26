@@ -120,7 +120,7 @@ function showToast(message, type = 'success') {
     }, 2800);
 }
 
-function openConfirmDialog({ title, message, confirmText = 'Ya, Lanjutkan', onConfirm }) {
+function openConfirmDialog({ title, message, confirmText = t('modal.confirmOk'), onConfirm }) {
     confirmTitleEl.textContent = title;
     confirmMessageEl.textContent = message;
     confirmOkBtn.textContent = confirmText;
@@ -188,7 +188,7 @@ async function saveStateToStorage({ updateStatus = true } = {}) {
     }
 
     if (updateStatus && saveStatusEl) {
-        saveStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tersimpan lokal`;
+        saveStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span>${escapeHtml(t('header.savedLocal'))}</span>`;
     }
 }
 
@@ -220,7 +220,7 @@ async function loadStateFromStorage() {
 
 function scheduleAutoSave() {
     if (saveStatusEl) {
-        saveStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Menyimpan...`;
+        saveStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> <span>${escapeHtml(t('header.saving'))}</span>`;
     }
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
@@ -446,7 +446,7 @@ function fitTreeToScreen(animate = true) {
 function getGenderBadgeInfo(gender) {
     if (gender === 'male') {
         return {
-            label: 'Laki-laki',
+            label: t('node.genderMale'),
             badgeClass: 'bg-blue-100/80 text-blue-700 border-blue-200 hover:bg-blue-200/70',
             avatarBg: 'bg-blue-100 text-blue-700 border-blue-200',
             icon: '♂'
@@ -454,14 +454,14 @@ function getGenderBadgeInfo(gender) {
     }
     if (gender === 'female') {
         return {
-            label: 'Perempuan',
+            label: t('node.genderFemale'),
             badgeClass: 'bg-rose-100/80 text-rose-700 border-rose-200 hover:bg-rose-200/70',
             avatarBg: 'bg-rose-100 text-rose-700 border-rose-200',
             icon: '♀'
         };
     }
     return {
-        label: 'Netral',
+        label: t('node.genderNeutral'),
         badgeClass: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/70',
         avatarBg: 'bg-slate-100 text-slate-600 border-slate-200',
         icon: '•'
@@ -613,11 +613,11 @@ function createNodeElement(node) {
 
         <!-- Header Kartu: Toggle Gender & Hapus -->
         <div class="flex items-center justify-between gap-2 mb-2.5">
-            <button type="button" data-action="toggle-gender" class="no-export inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold transition cursor-pointer ${genderInfo.badgeClass}" title="Klik untuk ganti warna/gender">
+            <button type="button" data-action="toggle-gender" class="no-export inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold transition cursor-pointer ${genderInfo.badgeClass}" title="${escapeHtml(t('node.toggleGenderTitle'))}">
                 <span>${genderInfo.icon}</span>
                 <span>${genderInfo.label}</span>
             </button>
-            <button type="button" data-action="delete-node" class="no-export p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer" title="Hapus Anggota Ini">
+            <button type="button" data-action="delete-node" class="no-export p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer" title="${escapeHtml(t('node.deleteTitle'))}">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
         </div>
@@ -625,7 +625,7 @@ function createNodeElement(node) {
         <!-- Konten Utama: Avatar + Direct Inline Inputs -->
         <div class="flex items-start gap-3">
             <!-- Avatar dengan Upload & Kompresi Lokal -->
-            <button type="button" data-action="upload-avatar" class="group relative w-12 h-12 rounded-2xl border overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition ${genderInfo.avatarBg}" title="Klik untuk unggah foto profil">
+            <button type="button" data-action="upload-avatar" class="group relative w-12 h-12 rounded-2xl border overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition ${genderInfo.avatarBg}" title="${escapeHtml(t('node.uploadAvatarTitle'))}">
                 ${node.photo
                     ? `<img src="${node.photo}" alt="${escapeHtml(node.name)}" class="w-full h-full object-cover">`
                     : `<span class="font-display font-bold text-sm">${initials || '?'}</span>`
@@ -637,22 +637,22 @@ function createNodeElement(node) {
 
             <!-- Direct Inline Editing Fields -->
             <div class="flex-1 min-w-0 space-y-1">
-                <input type="text" data-field="name" value="${escapeHtml(node.name)}" placeholder="Nama Lengkap..." class="inline-input font-display font-bold text-sm text-slate-900 leading-snug" />
-                <input type="text" data-field="years" value="${escapeHtml(node.years)}" placeholder="Tahun Lahir - Wafat..." class="inline-input text-[11px] font-medium text-slate-500" />
-                <input type="text" data-field="role" value="${escapeHtml(node.role)}" placeholder="Peran / Catatan singkat..." class="inline-input text-[11px] text-slate-600" />
+                <input type="text" data-field="name" value="${escapeHtml(node.name)}" placeholder="${escapeHtml(t('node.namePlaceholder'))}" class="inline-input font-display font-bold text-sm text-slate-900 leading-snug" />
+                <input type="text" data-field="years" value="${escapeHtml(node.years)}" placeholder="${escapeHtml(t('node.yearsPlaceholder'))}" class="inline-input text-[11px] font-medium text-slate-500" />
+                <input type="text" data-field="role" value="${escapeHtml(node.role)}" placeholder="${escapeHtml(t('node.rolePlaceholder'))}" class="inline-input text-[11px] text-slate-600" />
             </div>
         </div>
 
         <!-- Quick Relation Action Buttons (Disembunyikan saat Export PNG) -->
         <div class="no-export grid grid-cols-3 gap-1.5 mt-3 pt-2.5 border-t border-slate-100">
-            <button type="button" data-action="add-parent" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200/70 hover:border-indigo-200 text-[10px] font-semibold transition cursor-pointer" title="Tambah Orang Tua di atasnya">
-                <span>+ Ortu</span>
+            <button type="button" data-action="add-parent" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 border border-slate-200/70 hover:border-indigo-200 text-[10px] font-semibold transition cursor-pointer whitespace-nowrap" title="${escapeHtml(t('node.addParentTitle'))}">
+                <span>${escapeHtml(t('node.addParent'))}</span>
             </button>
-            <button type="button" data-action="add-spouse" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200/70 hover:border-rose-200 text-[10px] font-semibold transition cursor-pointer" title="Tambah Pasangan di sampingnya">
-                <span>+ Pasangan</span>
+            <button type="button" data-action="add-spouse" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200/70 hover:border-rose-200 text-[10px] font-semibold transition cursor-pointer whitespace-nowrap" title="${escapeHtml(t('node.addSpouseTitle'))}">
+                <span>${escapeHtml(t('node.addSpouse'))}</span>
             </button>
-            <button type="button" data-action="add-child" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200/70 hover:border-emerald-200 text-[10px] font-semibold transition cursor-pointer" title="Tambah Anak di bawahnya">
-                <span>+ Anak</span>
+            <button type="button" data-action="add-child" class="flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200/70 hover:border-emerald-200 text-[10px] font-semibold transition cursor-pointer whitespace-nowrap" title="${escapeHtml(t('node.addChildTitle'))}">
+                <span>${escapeHtml(t('node.addChild'))}</span>
             </button>
         </div>
     `;
@@ -763,7 +763,7 @@ function renderAll() {
 
 function updateStatsCounter() {
     if (statsCounterEl) {
-        statsCounterEl.textContent = `${appState.nodes.length} anggota`;
+        statsCounterEl.textContent = t('header.memberCount', { count: appState.nodes.length });
     }
 }
 
@@ -778,9 +778,9 @@ function addStandaloneNode() {
 
     const newNode = {
         id: generateId('node'),
-        name: 'Anggota Baru',
+        name: t('node.newMemberName'),
         years: '',
-        role: 'Klik untuk isi catatan',
+        role: t('node.newMemberRole'),
         gender: 'neutral',
         photo: null,
         x: Math.round(centerWorldX + jitterX),
@@ -790,7 +790,7 @@ function addStandaloneNode() {
     appState.nodes.push(newNode);
     renderAll();
     scheduleAutoSave();
-    showToast('Anggota keluarga baru ditambahkan', 'info');
+    showToast(t('alerts.memberAdded'), 'info');
 }
 
 function addRelatedNode(anchorNodeId, relationType) {
@@ -799,7 +799,7 @@ function addRelatedNode(anchorNodeId, relationType) {
 
     const newNode = {
         id: generateId('node'),
-        name: relationType === 'parent' ? 'Orang Tua Baru' : relationType === 'spouse' ? 'Pasangan Baru' : 'Anak Baru',
+        name: relationType === 'parent' ? t('node.newParentName') : relationType === 'spouse' ? t('node.newSpouseName') : t('node.newChildName'),
         years: '',
         role: '',
         gender: relationType === 'spouse'
@@ -889,8 +889,12 @@ function addRelatedNode(anchorNodeId, relationType) {
 
     renderAll();
     scheduleAutoSave();
-    const labelMap = { parent: 'Orang Tua', spouse: 'Pasangan', child: 'Anak' };
-    showToast(`${labelMap[relationType]} ditambahkan`, 'success');
+    const labelMap = {
+        parent: t('node.relationParent'),
+        spouse: t('node.relationSpouse'),
+        child: t('node.relationChild')
+    };
+    showToast(t('alerts.relationAdded', { relation: labelMap[relationType] }), 'success');
 }
 
 function deleteNode(nodeId) {
@@ -898,7 +902,7 @@ function deleteNode(nodeId) {
     appState.edges = appState.edges.filter(e => e.source !== nodeId && e.target !== nodeId);
     renderAll();
     scheduleAutoSave();
-    showToast('Anggota keluarga dihapus', 'info');
+    showToast(t('alerts.memberDeleted'), 'info');
 }
 
 // ============================================================================
@@ -931,7 +935,7 @@ avatarUploadInput.addEventListener('change', (e) => {
 
             renderAll();
             scheduleAutoSave();
-            showToast('Foto profil dikompresi & diperbarui', 'success');
+            showToast(t('alerts.avatarUpdated'), 'success');
         };
         img.src = ev.target.result;
     };
@@ -1060,7 +1064,7 @@ function runAutoLayout() {
         }
     }
     requestAnimationFrame(syncEdgesDuringLayout);
-    showToast('Posisi pohon silsilah dirapikan', 'success');
+    showToast(t('alerts.layoutTidied'), 'success');
 }
 
 // ============================================================================
@@ -1087,7 +1091,7 @@ document.addEventListener('pointerdown', (e) => {
 // ============================================================================
 function openExportPngModal() {
     if (appState.nodes.length === 0) {
-        showToast('Kanvas masih kosong untuk diekspor', 'error');
+        showToast(t('alerts.exportEmptyCanvas'), 'error');
         return;
     }
     exportPngModal.classList.remove('hidden');
@@ -1191,7 +1195,7 @@ async function exportTreeToHDImage(bgStyle = 'white') {
     watermark.style.fontSize = '10px';
     watermark.style.fontFamily = 'Inter, sans-serif';
     watermark.style.color = '#94a3b8';
-    watermark.textContent = 'Kanvas Silsilah Keluarga • 100% Lokal & Privat';
+    watermark.textContent = t('app.watermark');
 
     stage.appendChild(worldClone);
     stage.appendChild(watermark);
@@ -1206,7 +1210,7 @@ async function exportTreeToHDImage(bgStyle = 'white') {
                 cacheBust: true
             });
             triggerDownloadUrl(dataUrl, `silsilah-keluarga-hd-${new Date().toISOString().slice(0, 10)}.png`);
-            showToast('Gambar PNG HD (2x) berhasil diunduh', 'success');
+            showToast(t('alerts.pngHdDownloaded'), 'success');
         } else {
             throw new Error('Library html-to-image tidak tersedia');
         }
@@ -1256,7 +1260,7 @@ function renderFallbackCanvasPng(width, height, offsetX, offsetY, bgStyle) {
 
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillText(node.name || 'Tanpa Nama', x + 16, y + 34, NODE_WIDTH - 32);
+        ctx.fillText(node.name || t('node.untitled'), x + 16, y + 34, NODE_WIDTH - 32);
 
         ctx.fillStyle = '#64748b';
         ctx.font = '12px Inter, sans-serif';
@@ -1265,7 +1269,7 @@ function renderFallbackCanvasPng(width, height, offsetX, offsetY, bgStyle) {
     });
 
     triggerDownloadUrl(canvas.toDataURL('image/png'), `silsilah-keluarga-${new Date().toISOString().slice(0, 10)}.png`);
-    showToast('Gambar PNG berhasil diunduh', 'success');
+    showToast(t('alerts.pngDownloaded'), 'success');
 }
 
 function triggerDownloadUrl(url, filename) {

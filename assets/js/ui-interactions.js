@@ -54,16 +54,16 @@ function buildNodeRelationContext(nodeId, nodeMap) {
     });
 
     if (parentNames.length > 0) {
-        return `Anak dari ${parentNames.slice(0, 2).join(' & ')}`;
+        return t('search.childOf', { parents: parentNames.slice(0, 2).join(' & ') });
     }
     if (spouseNames.length > 0) {
-        return `Pasangan dari ${spouseNames[0]}`;
+        return t('search.spouseOf', { spouse: spouseNames[0] });
     }
     if (childNames.length > 0) {
-        const extra = childNames.length > 2 ? ` +${childNames.length - 2} lainnya` : '';
-        return `Orang tua dari ${childNames.slice(0, 2).join(', ')}${extra}`;
+        const extra = childNames.length > 2 ? t('search.parentOfExtra', { count: childNames.length - 2 }) : '';
+        return t('search.parentOf', { children: `${childNames.slice(0, 2).join(', ')}${extra}` });
     }
-    return 'Anggota keluarga mandiri';
+    return t('search.standalone');
 }
 
 function highlightMatchedText(text, query) {
@@ -100,8 +100,8 @@ function renderSearchResults(rawQuery = '') {
     }
 
     searchMatchCount.textContent = query
-        ? `${filteredSearchResults.length} dari ${appState.nodes.length} anggota`
-        : `${appState.nodes.length} anggota tersedia`;
+        ? t('search.countFiltered', { filtered: filteredSearchResults.length, total: appState.nodes.length })
+        : t('search.countAvailable', { total: appState.nodes.length });
 
     if (filteredSearchResults.length === 0) {
         searchResultsList.innerHTML = `
@@ -109,8 +109,8 @@ function renderSearchResults(rawQuery = '') {
                 <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5">
                     <i data-lucide="user-x" class="w-5 h-5"></i>
                 </div>
-                <p class="text-xs sm:text-sm font-semibold text-slate-700">Anggota keluarga tidak ditemukan</p>
-                <p class="text-[11px] text-slate-400 mt-1">Coba kata kunci nama, tahun lahir, atau peran lainnya.</p>
+                <p class="text-xs sm:text-sm font-semibold text-slate-700">${escapeHtml(t('search.emptyTitle'))}</p>
+                <p class="text-[11px] text-slate-400 mt-1">${escapeHtml(t('search.emptySubtitle'))}</p>
             </div>
         `;
         if (window.lucide) lucide.createIcons({ root: searchResultsList });
@@ -139,7 +139,7 @@ function renderSearchResults(rawQuery = '') {
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
                         <p class="font-display font-bold text-xs sm:text-sm text-slate-900 truncate">
-                            ${highlightMatchedText(node.name || 'Tanpa Nama', rawQuery.trim())}
+                            ${highlightMatchedText(node.name || t('node.untitled'), rawQuery.trim())}
                         </p>
                         ${node.years ? `<span class="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md shrink-0">${highlightMatchedText(node.years, rawQuery.trim())}</span>` : ''}
                     </div>
@@ -415,9 +415,9 @@ document.getElementById('btn-reset-view').addEventListener('click', () => fitTre
 
 document.getElementById('btn-load-sample').addEventListener('click', () => {
     openConfirmDialog({
-        title: 'Muat Contoh Keluarga 3 Generasi?',
-        message: 'Data kanvas saat ini akan diganti dengan contoh silsilah 3 generasi.',
-        confirmText: 'Muat Contoh',
+        title: t('alerts.loadSampleTitle'),
+        message: t('alerts.loadSampleMessage'),
+        confirmText: t('alerts.loadSampleConfirm'),
         onConfirm: () => {
             unlinkDriveFile(false);
             const sample = getSampleFamilyData();
@@ -426,24 +426,24 @@ document.getElementById('btn-load-sample').addEventListener('click', () => {
             renderAll();
             requestAnimationFrame(() => fitTreeToScreen(true));
             scheduleAutoSave();
-            showToast('Contoh silsilah 3 generasi dimuat', 'success');
+            showToast(t('alerts.loadSampleSuccess'), 'success');
         }
     });
 });
 
 document.getElementById('btn-reset-empty').addEventListener('click', () => {
     openConfirmDialog({
-        title: 'Mulai Silsilah Baru dari Kosong?',
-        message: 'Semua kartu di kanvas akan dihapus dan diganti dengan 1 kartu awal untuk Anda mulai.',
-        confirmText: 'Reset Kosong',
+        title: t('alerts.resetTitle'),
+        message: t('alerts.resetMessage'),
+        confirmText: t('alerts.resetConfirm'),
         onConfirm: () => {
             unlinkDriveFile(false);
             appState.nodes = [
                 {
                     id: generateId('node'),
-                    name: 'Kepala Keluarga',
-                    years: '1980 - Sekarang',
-                    role: 'Klik untuk edit nama & foto',
+                    name: t('node.resetInitialName'),
+                    years: t('node.resetInitialYears'),
+                    role: t('node.resetInitialRole'),
                     gender: 'neutral',
                     photo: null,
                     x: 0,
@@ -454,7 +454,7 @@ document.getElementById('btn-reset-empty').addEventListener('click', () => {
             renderAll();
             requestAnimationFrame(() => fitTreeToScreen(true));
             scheduleAutoSave();
-            showToast('Kanvas direset ke 1 kartu awal', 'info');
+            showToast(t('alerts.resetSuccess'), 'info');
         }
     });
 });
