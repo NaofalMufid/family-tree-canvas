@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-tree-v7';
+const CACHE_NAME = 'family-tree-v8';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -22,7 +22,6 @@ const CORE_ASSETS = [
 const EXTERNAL_ASSETS = [
   'https://cdn.tailwindcss.com/',
   'https://unpkg.com/lucide@latest',
-  'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap'
 ];
 

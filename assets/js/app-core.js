@@ -1156,10 +1156,167 @@ document.getElementById('btn-confirm-png').addEventListener('click', async () =>
     await exportTreeToHDImage(bgStyle);
 });
 
+function loadImageAsync(src) {
+    return new Promise((resolve) => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
+
+function drawCanvasTruncatedText(ctx, text, x, y, maxWidth) {
+    if (!text) return;
+    let str = String(text);
+    if (ctx.measureText(str).width <= maxWidth) {
+        ctx.fillText(str, x, y);
+        return;
+    }
+    while (str.length > 1 && ctx.measureText(`${str}…`).width > maxWidth) {
+        str = str.slice(0, -1);
+    }
+    ctx.fillText(`${str}…`, x, y);
+}
+
+function drawExportEdges(ctx, offsetX, offsetY) {
+    const nodeMap = new Map(appState.nodes.map(n => [n.id, n]));
+    const spousePairs = new Map();
+
+    // 1. Garis pasangan (spouse)
+    appState.edges.forEach(edge => {
+        if (edge.type !== 'spouse') return;
+        const a = nodeMap.get(edge.source);
+        const b = nodeMap.get(edge.target);
+        if (!a || !b) return;
+
+        spousePairs.set([a.id, b.id].sort().join('__'), [a, b]);
+
+        const hA = getNodeActualHeight(a.id);
+        const hB = getNodeActualHeight(b.id);
+        const leftNode = a.x <= b.x ? a : b;
+        const rightNode = a.x <= b.x ? b : a;
+        const hLeft = a.x <= b.x ? hA : hB;
+        const hRight = a.x <= b.x ? hB : hA;
+
+        const x1 = leftNode.x + NODE_WIDTH + offsetX;
+        const y1 = leftNode.y + hLeft / 2 + offsetY;
+        const x2 = rightNode.x + offsetX;
+        const y2 = rightNode.y + hRight / 2 + offsetY;
+
+        const dx = Math.abs(x2 - x1);
+        const cpx = Math.max(36, dx * 0.45);
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.65)';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.bezierCurveTo(x1 + cpx, y1, x2 - cpx, y2, x2, y2);
+        ctx.stroke();
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        ctx.fillStyle = '#fff1f2';
+        ctx.strokeStyle = '#fda4af';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(midX, midY, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#e11d48';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('♥', midX, midY + 0.5);
+        ctx.restore();
+    });
+
+    // 2. Garis orang tua -> anak (parent-child)
+    const childParentsMap = new Map();
+    appState.edges.forEach(edge => {
+        if (edge.type !== 'parent-child') return;
+        if (!nodeMap.has(edge.source) || !nodeMap.has(edge.target)) return;
+        if (!childParentsMap.has(edge.target)) childParentsMap.set(edge.target, []);
+        childParentsMap.get(edge.target).push(edge.source);
+    });
+
+    childParentsMap.forEach((parentIds, childId) => {
+        const child = nodeMap.get(childId);
+        if (!child) return;
+
+        const targetX = child.x + NODE_WIDTH / 2 + offsetX;
+        const targetY = child.y + offsetY;
+
+        let usedCombinedCouple = false;
+        if (parentIds.length >= 2) {
+            for (let i = 0; i < parentIds.length; i++) {
+                for (let j = i + 1; j < parentIds.length; j++) {
+                    const key = [parentIds[i], parentIds[j]].sort().join('__');
+                    if (spousePairs.has(key)) {
+                        const p1 = nodeMap.get(parentIds[i]);
+                        const p2 = nodeMap.get(parentIds[j]);
+                        const h1 = getNodeActualHeight(p1.id);
+                        const h2 = getNodeActualHeight(p2.id);
+
+                        const startX = ((p1.x + NODE_WIDTH / 2) + (p2.x + NODE_WIDTH / 2)) / 2 + offsetX;
+                        const startY = Math.max(p1.y + h1 / 2, p2.y + h2 / 2) + offsetY;
+                        const midY = startY + (targetY - startY) * 0.52;
+
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(99, 102, 241, 0.65)';
+                        ctx.lineWidth = 2.2;
+                        ctx.beginPath();
+                        ctx.moveTo(startX, startY);
+                        ctx.bezierCurveTo(startX, midY, targetX, midY, targetX, targetY);
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#6366f1';
+                        ctx.beginPath();
+                        ctx.arc(targetX, targetY, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+
+                        usedCombinedCouple = true;
+                        break;
+                    }
+                }
+                if (usedCombinedCouple) break;
+            }
+        }
+
+        if (!usedCombinedCouple) {
+            parentIds.forEach(pid => {
+                const parent = nodeMap.get(pid);
+                if (!parent) return;
+                const hP = getNodeActualHeight(parent.id);
+                const startX = parent.x + NODE_WIDTH / 2 + offsetX;
+                const startY = parent.y + hP + offsetY;
+                const midY = startY + (targetY - startY) * 0.5;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(99, 102, 241, 0.65)';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.bezierCurveTo(startX, midY, targetX, midY, targetX, targetY);
+                ctx.stroke();
+
+                ctx.fillStyle = '#6366f1';
+                ctx.beginPath();
+                ctx.arc(targetX, targetY, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+    });
+}
+
 async function exportTreeToHDImage(bgStyle = 'white') {
     if (appState.nodes.length === 0) return;
 
-    const PADDING = 40;
+    const PADDING = 48;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
     appState.nodes.forEach(node => {
@@ -1175,107 +1332,32 @@ async function exportTreeToHDImage(bgStyle = 'white') {
     const offsetX = -minX + PADDING;
     const offsetY = -minY + PADDING;
 
-    // Buat stage off-screen bersih tanpa transform zoom/pan dan tanpa tombol kontrol UI
-    const stage = document.createElement('div');
-    stage.style.position = 'fixed';
-    stage.style.left = '-99999px';
-    stage.style.top = '0';
-    stage.style.width = `${exportWidth}px`;
-    stage.style.height = `${exportHeight}px`;
-    stage.style.overflow = 'hidden';
-    stage.style.backgroundColor = bgStyle === 'grid' ? '#f8fafc' : '#ffffff';
-    if (bgStyle === 'grid') {
-        stage.style.backgroundImage = 'radial-gradient(#cbd5e1 1.25px, transparent 1.25px)';
-        stage.style.backgroundSize = '24px 24px';
-    }
+    // Preload seluruh foto avatar (Data URL lokal) sebelum menggambar ke Canvas 2D
+    const loadedPhotos = new Map();
+    await Promise.all(
+        appState.nodes.map(async (node) => {
+            if (node.photo) {
+                const img = await loadImageAsync(node.photo);
+                if (img) loadedPhotos.set(node.id, img);
+            }
+        })
+    );
 
-    const worldClone = document.createElement('div');
-    worldClone.style.position = 'absolute';
-    worldClone.style.left = `${offsetX}px`;
-    worldClone.style.top = `${offsetY}px`;
-
-    // Clone SVG edges
-    const svgClone = edgesLayer.cloneNode(true);
-    svgClone.style.position = 'absolute';
-    svgClone.style.left = '0';
-    svgClone.style.top = '0';
-    svgClone.style.overflow = 'visible';
-    worldClone.appendChild(svgClone);
-
-    // Clone seluruh kartu node & konversi <input> ke teks statis agar tajam dan tidak terpotong
-    appState.nodes.forEach(node => {
-        const origEl = document.getElementById(`node-el-${node.id}`);
-        if (!origEl) return;
-        const cardClone = origEl.cloneNode(true);
-        cardClone.classList.remove('search-highlight-ring', 'is-dragging', 'is-animating');
-        cardClone.style.left = `${node.x}px`;
-        cardClone.style.top = `${node.y}px`;
-
-        // Sembunyikan semua elemen kontrol UI (.no-export)
-        cardClone.querySelectorAll('.no-export').forEach(ctrl => ctrl.remove());
-
-        // Ganti input inline dengan div teks statis agar rendering PNG sempurna
-        cardClone.querySelectorAll('input.inline-input').forEach(inp => {
-            const textDiv = document.createElement('div');
-            textDiv.className = inp.className.replace('inline-input', '');
-            textDiv.textContent = inp.value || '';
-            if (!inp.value) textDiv.style.display = 'none';
-            inp.replaceWith(textDiv);
-        });
-
-        worldClone.appendChild(cardClone);
-    });
-
-    // Watermark kecil elegan di pojok kanan bawah hasil export
-    const watermark = document.createElement('div');
-    watermark.style.position = 'absolute';
-    watermark.style.right = '14px';
-    watermark.style.bottom = '10px';
-    watermark.style.fontSize = '10px';
-    watermark.style.fontFamily = 'Inter, sans-serif';
-    watermark.style.color = '#94a3b8';
-    watermark.textContent = t('app.watermark');
-
-    stage.appendChild(worldClone);
-    stage.appendChild(watermark);
-    document.body.appendChild(stage);
-
-    try {
-        if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
-            const dataUrl = await window.htmlToImage.toPng(stage, {
-                pixelRatio: 2,
-                width: exportWidth,
-                height: exportHeight,
-                cacheBust: true
-            });
-            triggerDownloadUrl(dataUrl, `silsilah-keluarga-hd-${new Date().toISOString().slice(0, 10)}.png`);
-            showToast(t('alerts.pngHdDownloaded'), 'success');
-        } else {
-            throw new Error('Library html-to-image tidak tersedia');
-        }
-    } catch (err) {
-        console.warn('Fallback ke Canvas 2D renderer:', err);
-        renderFallbackCanvasPng(exportWidth, exportHeight, offsetX, offsetY, bgStyle);
-    } finally {
-        stage.remove();
-    }
-}
-
-function renderFallbackCanvasPng(width, height, offsetX, offsetY, bgStyle) {
-    const scale = 2;
+    const scale = 2; // Retina 2x DPI
     const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    canvas.width = exportWidth * scale;
+    canvas.height = exportHeight * scale;
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
+    // 1. Latar Belakang
     ctx.fillStyle = bgStyle === 'grid' ? '#f8fafc' : '#ffffff';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, exportWidth, exportHeight);
 
     if (bgStyle === 'grid') {
         ctx.fillStyle = '#cbd5e1';
-        for (let gx = 0; gx < width; gx += 24) {
-            for (let gy = 0; gy < height; gy += 24) {
+        for (let gx = 0; gx < exportWidth; gx += 24) {
+            for (let gy = 0; gy < exportHeight; gy += 24) {
                 ctx.beginPath();
                 ctx.arc(gx, gy, 1.2, 0, Math.PI * 2);
                 ctx.fill();
@@ -1283,32 +1365,153 @@ function renderFallbackCanvasPng(width, height, offsetX, offsetY, bgStyle) {
         }
     }
 
-    // Gambar kartu sederhana sebagai fallback offline
+    // 2. Garis Relasi (Spouse & Parent-Child)
+    drawExportEdges(ctx, offsetX, offsetY);
+
+    // 3. Kartu Anggota Keluarga
+    const genderTheme = {
+        male: { border: '#bfdbfe', accent: '#3b82f6', badgeBg: '#dbeafe', badgeBorder: '#bfdbfe', badgeText: '#1d4ed8' },
+        female: { border: '#fbcfe8', accent: '#f43f5e', badgeBg: '#ffe4e6', badgeBorder: '#fecdd3', badgeText: '#be123c' },
+        neutral: { border: '#e2e8f0', accent: '#64748b', badgeBg: '#f1f5f9', badgeBorder: '#e2e8f0', badgeText: '#475569' }
+    };
+
     appState.nodes.forEach(node => {
         const x = node.x + offsetX;
         const y = node.y + offsetY;
-        const h = 115;
+        const h = Math.max(118, getNodeActualHeight(node.id) - 34);
+        const theme = genderTheme[node.gender] || genderTheme.neutral;
+        const genderInfo = getGenderBadgeInfo(node.gender);
 
+        // Bayangan & badan kartu
+        ctx.save();
+        ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
         ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = node.gender === 'male' ? '#93c5fd' : node.gender === 'female' ? '#fda4af' : '#cbd5e1';
-        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(x, y, NODE_WIDTH, h, 14);
+        ctx.roundRect(x, y, NODE_WIDTH, h, 16);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.strokeStyle = theme.border;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(x, y, NODE_WIDTH, h, 16);
+        ctx.stroke();
+
+        // Top accent bar
+        ctx.fillStyle = theme.accent;
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.roundRect(x + 16, y, NODE_WIDTH - 32, 4, [0, 0, 4, 4]);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Gender badge pill
+        const badgeText = `${genderInfo.icon} ${genderInfo.label}`;
+        ctx.font = '600 10px Inter, sans-serif';
+        const badgeW = Math.min(NODE_WIDTH - 28, ctx.measureText(badgeText).width + 16);
+        ctx.fillStyle = theme.badgeBg;
+        ctx.strokeStyle = theme.badgeBorder;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(x + 14, y + 14, badgeW, 18, 9);
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillText(node.name || t('node.untitled'), x + 16, y + 34, NODE_WIDTH - 32);
+        ctx.fillStyle = theme.badgeText;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeText, x + 22, y + 23.5);
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '12px Inter, sans-serif';
-        ctx.fillText(node.years || '', x + 16, y + 58, NODE_WIDTH - 32);
-        ctx.fillText(node.role || '', x + 16, y + 80, NODE_WIDTH - 32);
+        // Avatar (48x48)
+        const avX = x + 14;
+        const avY = y + 42;
+        const avSize = 48;
+        const photoImg = loadedPhotos.get(node.id);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(avX, avY, avSize, avSize, 14);
+        ctx.clip();
+
+        if (photoImg) {
+            const minSide = Math.min(photoImg.width, photoImg.height);
+            const sx = (photoImg.width - minSide) / 2;
+            const sy = (photoImg.height - minSide) / 2;
+            ctx.drawImage(photoImg, sx, sy, minSide, minSide, avX, avY, avSize, avSize);
+        } else {
+            ctx.fillStyle = theme.badgeBg;
+            ctx.fillRect(avX, avY, avSize, avSize);
+            const initials = (node.name || 'A')
+                .split(' ')
+                .slice(0, 2)
+                .map(w => w[0])
+                .join('')
+                .toUpperCase() || '?';
+            ctx.fillStyle = theme.badgeText;
+            ctx.font = '700 14px "Plus Jakarta Sans", Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initials, avX + avSize / 2, avY + avSize / 2 + 0.5);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = theme.badgeBorder;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(avX, avY, avSize, avSize, 14);
+        ctx.stroke();
+
+        // Teks Nama, Tahun, & Peran
+        const textX = avX + avSize + 12;
+        const textMaxW = (x + NODE_WIDTH - 14) - textX;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '700 14px "Plus Jakarta Sans", Inter, sans-serif';
+        drawCanvasTruncatedText(ctx, node.name || t('node.untitled'), textX, avY + 2, textMaxW);
+
+        if (node.years) {
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 11px Inter, sans-serif';
+            drawCanvasTruncatedText(ctx, node.years, textX, avY + 22, textMaxW);
+        }
+
+        if (node.role) {
+            ctx.fillStyle = '#475569';
+            ctx.font = '400 11px Inter, sans-serif';
+            drawCanvasTruncatedText(ctx, node.role, textX, avY + (node.years ? 39 : 22), textMaxW);
+        }
     });
 
-    triggerDownloadUrl(canvas.toDataURL('image/png'), `silsilah-keluarga-${new Date().toISOString().slice(0, 10)}.png`);
-    showToast(t('alerts.pngDownloaded'), 'success');
+    // 4. Watermark pojok kanan bawah
+    ctx.save();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(t('app.watermark'), exportWidth - 14, exportHeight - 10);
+    ctx.restore();
+
+    const filename = `silsilah-keluarga-hd-${new Date().toISOString().slice(0, 10)}.png`;
+    if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                triggerDownloadUrl(canvas.toDataURL('image/png'), filename);
+            } else {
+                const url = URL.createObjectURL(blob);
+                triggerDownloadUrl(url, filename);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+            showToast(t('alerts.pngHdDownloaded'), 'success');
+        }, 'image/png');
+    } else {
+        triggerDownloadUrl(canvas.toDataURL('image/png'), filename);
+        showToast(t('alerts.pngHdDownloaded'), 'success');
+    }
 }
 
 function triggerDownloadUrl(url, filename) {
