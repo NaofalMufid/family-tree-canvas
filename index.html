@@ -186,7 +186,11 @@
             </button>
             <button id="btn-import" role="menuitem" type="button"
                 class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition">
-                <i data-lucide="upload" class="w-4 h-4 text-slate-600"></i><span class="font-medium" data-i18n="toolbar.importJson">Import JSON</span>
+                <i data-lucide="upload" class="w-4 h-4 text-slate-600"></i><span class="font-medium" data-i18n="toolbar.importJson">Import JSON / CSV</span>
+            </button>
+            <button id="btn-download-csv-template" role="menuitem" type="button"
+                class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-indigo-700 hover:bg-indigo-50 transition">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-indigo-600"></i><span class="font-medium" data-i18n="toolbar.downloadCsvTemplate">Unduh Template CSV (Excel)</span>
             </button>
             <div class="my-1 border-t border-slate-100"></div>
             <button id="btn-load-sample" role="menuitem" type="button"
@@ -200,7 +204,7 @@
         </div>
     </div>
 
-    <input type="file" id="file-import-input" accept=".json,application/json" class="hidden">
+    <input type="file" id="file-import-input" accept=".json,.csv,application/json,text/csv" class="hidden">
 
     <!-- Floating Zoom & Navigation Controls (Bawah Kanan) -->
     <div

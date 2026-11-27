@@ -309,17 +309,243 @@ function importJsonText(rawText, context = { source: 'local' }) {
     return true;
 }
 
+// ============================================================================
+// PARSER CSV RINGAN (EXCEL / GOOGLE SHEETS) & UNDUH TEMPLATE CSV
+// ============================================================================
+function detectCsvDelimiter(headerLine) {
+    let commas = 0;
+    let semicolons = 0;
+    let inQuotes = false;
+    for (let i = 0; i < headerLine.length; i++) {
+        const ch = headerLine[i];
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+        } else if (!inQuotes) {
+            if (ch === ',') commas++;
+            else if (ch === ';') semicolons++;
+        }
+    }
+    return semicolons > commas ? ';' : ',';
+}
+
+function parseCsvRows(rawText) {
+    const cleaned = String(rawText || '').replace(/^\uFEFF/, '');
+    const firstLineBreak = cleaned.search(/\r?\n/);
+    const headerSample = firstLineBreak === -1 ? cleaned : cleaned.slice(0, firstLineBreak);
+    const delimiter = detectCsvDelimiter(headerSample);
+
+    const rows = [];
+    let currentRow = [];
+    let currentCell = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < cleaned.length; i++) {
+        const ch = cleaned[i];
+        const next = cleaned[i + 1];
+
+        if (ch === '"') {
+            if (inQuotes && next === '"') {
+                currentCell += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (ch === delimiter && !inQuotes) {
+            currentRow.push(currentCell.trim());
+            currentCell = '';
+        } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+            if (ch === '\r' && next === '\n') i++;
+            currentRow.push(currentCell.trim());
+            if (currentRow.some(cell => cell !== '')) {
+                rows.push(currentRow);
+            }
+            currentRow = [];
+            currentCell = '';
+        } else {
+            currentCell += ch;
+        }
+    }
+
+    currentRow.push(currentCell.trim());
+    if (currentRow.some(cell => cell !== '')) {
+        rows.push(currentRow);
+    }
+    return rows;
+}
+
+function normalizeCsvGender(rawGender) {
+    const val = String(rawGender || '').trim().toLowerCase();
+    if (['male', 'm', 'l', 'laki-laki', 'pria'].includes(val)) return 'male';
+    if (['female', 'f', 'p', 'perempuan', 'wanita'].includes(val)) return 'female';
+    return '';
+}
+
+function parseCsvToTreeData(rawText) {
+    const rows = parseCsvRows(rawText);
+    if (rows.length === 0) {
+        throw new Error(t('alerts.csvEmptyData'));
+    }
+
+    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const colIndex = (name) => headers.indexOf(name);
+
+    const idIdx = colIndex('id');
+    const nameIdx = colIndex('name');
+    if (idIdx === -1 || nameIdx === -1) {
+        throw new Error(t('alerts.csvMissingColumns'));
+    }
+
+    const genderIdx = colIndex('gender');
+    const yearsIdx = colIndex('years');
+    const roleIdx = colIndex('role');
+    const fatherIdx = colIndex('father_id');
+    const motherIdx = colIndex('mother_id');
+    const spouseIdx = colIndex('spouse_id');
+
+    const dataRows = rows.slice(1);
+    if (dataRows.length === 0) {
+        throw new Error(t('alerts.csvEmptyData'));
+    }
+
+    const nodes = [];
+    const nodeIdSet = new Set();
+    const rowRelations = [];
+
+    dataRows.forEach((row) => {
+        const id = (row[idIdx] || '').trim();
+        const name = (row[nameIdx] || '').trim();
+        if (!id || !name || nodeIdSet.has(id)) return;
+
+        nodeIdSet.add(id);
+        nodes.push({
+            id,
+            name,
+            gender: genderIdx !== -1 ? normalizeCsvGender(row[genderIdx]) : '',
+            years: yearsIdx !== -1 ? (row[yearsIdx] || '').trim() : '',
+            role: roleIdx !== -1 ? (row[roleIdx] || '').trim() : '',
+            photo: null,
+            x: 0,
+            y: 0
+        });
+
+        rowRelations.push({
+            id,
+            fatherId: fatherIdx !== -1 ? (row[fatherIdx] || '').trim() : '',
+            motherId: motherIdx !== -1 ? (row[motherIdx] || '').trim() : '',
+            spouseId: spouseIdx !== -1 ? (row[spouseIdx] || '').trim() : ''
+        });
+    });
+
+    if (nodes.length === 0) {
+        throw new Error(t('alerts.csvEmptyData'));
+    }
+
+    const edges = [];
+    const parentChildSeen = new Set();
+    const spouseSeen = new Set();
+
+    rowRelations.forEach((rel) => {
+        if (rel.fatherId && rel.fatherId !== rel.id && nodeIdSet.has(rel.fatherId)) {
+            const pcKey = `${rel.fatherId}->${rel.id}`;
+            if (!parentChildSeen.has(pcKey)) {
+                parentChildSeen.add(pcKey);
+                edges.push({
+                    id: generateId('edge'),
+                    type: 'parent-child',
+                    source: rel.fatherId,
+                    target: rel.id
+                });
+            }
+        }
+        if (rel.motherId && rel.motherId !== rel.id && nodeIdSet.has(rel.motherId)) {
+            const pcKey = `${rel.motherId}->${rel.id}`;
+            if (!parentChildSeen.has(pcKey)) {
+                parentChildSeen.add(pcKey);
+                edges.push({
+                    id: generateId('edge'),
+                    type: 'parent-child',
+                    source: rel.motherId,
+                    target: rel.id
+                });
+            }
+        }
+        if (rel.spouseId && rel.spouseId !== rel.id && nodeIdSet.has(rel.spouseId)) {
+            const spKey = [rel.id, rel.spouseId].sort().join('__');
+            if (!spouseSeen.has(spKey)) {
+                spouseSeen.add(spKey);
+                edges.push({
+                    id: generateId('edge'),
+                    type: 'spouse',
+                    source: rel.id,
+                    target: rel.spouseId
+                });
+            }
+        }
+    });
+
+    return { nodes, edges };
+}
+
+function importCsvText(rawText) {
+    const parsed = parseCsvToTreeData(rawText);
+    appState.nodes = parsed.nodes;
+    appState.edges = parsed.edges;
+    appState.isReadOnly = false;
+    if (typeof applyReadOnlyState === 'function') applyReadOnlyState();
+    unlinkDriveFile(false);
+    renderAll();
+    if (typeof runAutoLayout === 'function') {
+        runAutoLayout();
+    } else {
+        requestAnimationFrame(() => fitTreeToScreen(true));
+        scheduleAutoSave();
+    }
+    showToast(t('alerts.csvImportSuccess', { count: appState.nodes.length }), 'success');
+    return true;
+}
+
+function downloadCsvTemplate() {
+    const templateRows = [
+        ['id', 'name', 'gender', 'years', 'role', 'father_id', 'mother_id', 'spouse_id'],
+        ['1', 'Budi Santoso', 'Laki-laki', '1970 - Sekarang', 'Ayah, Arsitek', '', '', '2'],
+        ['2', 'Siti Aminah', 'Perempuan', '1973 - Sekarang', 'Ibu, Guru', '', '', '1'],
+        ['3', 'Andi Pratama', 'Laki-laki', '1998 - Sekarang', 'Anak Pertama', '1', '2', ''],
+        ['4', 'Nadia Putri', 'Perempuan', '2002 - Sekarang', 'Anak Kedua', '1', '2', '']
+    ];
+
+    const csvContent = templateRows
+        .map(row => row.map(cell => (/[,"\n\r;]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(','))
+        .join('\r\n');
+
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    triggerDownloadUrl(url, 'template-silsilah.csv');
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(t('alerts.csvTemplateDownloaded'), 'success');
+}
+
 document.getElementById('btn-import').addEventListener('click', () => {
     fileImportInput.value = '';
     fileImportInput.click();
 });
 
+document.getElementById('btn-download-csv-template')?.addEventListener('click', downloadCsvTemplate);
+
 fileImportInput.addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
+    const isCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
     const reader = new FileReader();
     reader.onload = (ev) => {
+        if (isCsv) {
+            try {
+                importCsvText(ev.target.result);
+            } catch (err) {
+                showToast(err?.message || t('alerts.csvInvalidFile'), 'error');
+            }
+            return;
+        }
         try {
             importJsonText(ev.target.result, { source: 'local' });
         } catch (err) {
